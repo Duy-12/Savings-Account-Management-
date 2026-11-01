@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Hệ thống Quản lý Sổ Tiết kiệm - Core Banking System">
+    <title>Hệ thống Quản lý Sổ Tiết kiệm (Savings Account Management)</title>
+    <!-- Liên kết stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-icon">🏦</span>
+                <div>
+                    <h2>CoreSavings</h2>
+                    <p>Hệ thống Quản lý Sổ Tiết kiệm</p>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <p class="nav-title">Nghiệp vụ Core Banking</p>
+                <a href="#dashboard" class="nav-link active">
+                    <span class="icon">📊</span> Tổng quan
+                </a>
+                <a href="#open-account" class="nav-link">
+                    <span class="icon">📝</span> Mở sổ tiết kiệm
+                </a>
+                <a href="#deposit" class="nav-link">
+                    <span class="icon">📥</span> Gửi tiền vào sổ
+                </a>
+                <a href="#withdraw" class="nav-link">
+                    <span class="icon">📤</span> Tất toán / Rút gốc & Lãi
+                </a>
+                <a href="#rollover" class="nav-link">
+                    <span class="icon">🔄</span> Tái tục tự động
+                </a>
+
+                <p class="nav-title">Tra cứu & Báo cáo</p>
+                <a href="#search" class="nav-link">
+                    <span class="icon">🔍</span> Tra cứu sổ
+                </a>
+                <a href="#report" class="nav-link">
+                    <span class="icon">📈</span> Báo cáo doanh số
+                </a>
+            </nav>
+
+            <div class="sidebar-user">
+                <span class="avatar">👨‍💼</span>
+                <div>
+                    <strong>Giao dịch viên 01</strong>
+                    <small>Chi nhánh TP.HCM</small>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="page-title">
+                    <h1>Bảng điều khiển giao dịch</h1>
+                    <span class="date-badge">Hôm nay: 01/11/2026</span>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-outline" id="btn-refresh">🔄 Làm mới</button>
+                    <button class="btn btn-primary" id="btn-open-modal">+ Mở sổ mới</button>
+                </div>
+            </header>
+
+            <!-- Dashboard Overview Stats -->
+            <section class="stats-cards">
+                <div class="card stat-card">
+                    <span class="stat-label">Tổng số dư tiền gửi</span>
+                    <span class="stat-value">25,840,000,000 đ</span>
+                    <span class="stat-sub positive">▲ +12.4% so với tháng trước</span>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-label">Sổ đang hoạt động</span>
+                    <span class="stat-value">1,420</span>
+                    <span class="stat-sub">35 sổ mở mới tuần này</span>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-label">Sổ đến hạn hôm nay</span>
+                    <span class="stat-value">18</span>
+                    <span class="stat-sub warning">⚠️ Chờ tất toán / Tái tục</span>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-label">Lãi suất kỳ hạn 6 tháng</span>
+                    <span class="stat-value">5.8% / năm</span>
+                    <span class="stat-sub">Áp dụng tự động</span>
+                </div>
+            </section>
+
+            <!-- Recent Passbooks Table -->
+            <section class="card table-card">
+                <div class="card-header">
+                    <h2>Danh sách sổ tiết kiệm giao dịch gần nhất</h2>
+                    <span class="badge info">Cập nhật thời gian thực</span>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Sổ</th>
+                                <th>Chủ tài khoản</th>
+                                <th>CCCD / CMND</th>
+                                <th>Kỳ hạn</th>
+                                <th>Số dư hiện tại</th>
+                                <th>Ngày mở</th>
+                                <th>Ngày đáo hạn</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="passbook-table-body">
+                            <tr>
+                                <td><strong>STK001092</strong></td>
+                                <td>Trần Thị Mai</td>
+                                <td>079201004812</td>
+                                <td>6 tháng (5.8%)</td>
+                                <td>100,000,000 đ</td>
+                                <td>01/11/2026</td>
+                                <td>01/05/2027</td>
+                                <td><span class="badge success">Đang hoạt động</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>STK001091</strong></td>
+                                <td>Lê Hoàng Nam</td>
+                                <td>079200003411</td>
+                                <td>Không kỳ hạn (0.15%)</td>
+                                <td>25,000,000 đ</td>
+                                <td>15/10/2026</td>
+                                <td>--</td>
+                                <td><span class="badge success">Đang hoạt động</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>STK001090</strong></td>
+                                <td>Phạm Quốc Bảo</td>
+                                <td>079202008923</td>
+                                <td>3 tháng (3.5%)</td>
+                                <td>50,000,000 đ</td>
+                                <td>01/08/2026</td>
+                                <td>01/11/2026</td>
+                                <td><span class="badge warning">Đến ngày đáo hạn</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Liên kết mã nguồn JavaScript -->
+    <script src="js/main.js"></script>
+</body>
+</html>
+
