@@ -143,3 +143,7 @@ npm install
   - `feature/auto-rollover` (Tái tục tự động)
 - **Quy tắc Commit Message:** Tuân thủ chuẩn Conventional Commits (`feat:`, `fix:`, `docs:`, `style:`, `refactor:`).
 - Mọi nhánh tính năng đều phải tạo **Pull Request (PR)** để các thành viên khác review trước khi merge vào `main`.
+
+
+## Frontend thành viên 1
+Xem `frontend/README_FRONTEND.md` để biết phạm vi giao diện, cách chạy demo và các giới hạn tích hợp API.
