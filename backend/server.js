@@ -1,45 +1,56 @@
 /**
  * ====================================================================
- * BACKEND SERVER (Node.js & Express - Kết nối MySQL)
- * File: server.js
+ * BACKEND SERVER (Node.js & Express - Kiến trúc 3 tầng chuẩn Chương 6)
+ * File: backend/server.js
  * ====================================================================
  */
-
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const path = require('path');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const env = require('./config/env');
+const apiRoutes = require('./routes');
+const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
-// Middleware
-app.use(cors());
+const app = express();
+
+// Security & Parser Middlewares
+app.use(
+    helmet({
+        contentSecurityPolicy: false
+    })
+);
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (!origin || env.corsOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(null, true); // Cho phép linh hoạt khi dev local; siết chặt ở Production
+        },
+        credentials: true
+    })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Phục vụ giao diện tĩnh Frontend
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Endpoint kiểm tra trạng thái API
-app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'success',
-        message: 'Core Banking Savings Management API is running.',
-        timestamp: new Date().toISOString()
+// Mount REST API Routes
+app.use('/api', apiRoutes);
+
+// Xử lý route API không tồn tại & Global Error Handler
+app.use('/api/*', notFoundHandler);
+app.use(errorHandler);
+
+if (require.main === module) {
+    app.listen(env.port, () => {
+        console.log(`🚀 CoreSavings API đang chạy tại: http://localhost:${env.port}`);
+        console.log(`🌐 Mở giao diện frontend tại: http://localhost:${env.port}/index.html`);
+        console.log(`🩺 Kiểm tra Health & MySQL tại: http://localhost:${env.port}/api/health`);
     });
-});
+}
 
-/**
- * Gợi ý các Endpoints Core Banking:
- * - POST   /api/savings/open       : Mở sổ mới (kiểm tra tiền gửi tối thiểu >= 100k)
- * - POST   /api/savings/deposit    : Gửi thêm tiền (áp dụng cho sổ không kỳ hạn)
- * - POST   /api/savings/withdraw   : Rút tiền / Tất toán (tính lãi suất, kỳ hạn)
- * - POST   /api/savings/rollover   : Tái tục tự động (gốc + lãi sang kỳ hạn mới)
- * - GET    /api/savings/search     : Tra cứu sổ theo CMND / Mã sổ / Tên KH
- * - GET    /api/reports/daily      : Báo cáo doanh số ngày (thu/chi/chênh lệch)
- */
-
-app.listen(PORT, () => {
-    console.log(`🚀 Server đang chạy tại: http://localhost:${PORT}`);
-    console.log(`🌐 Mở giao diện frontend tại: http://localhost:${PORT}/index.html`);
-});
+module.exports = app;

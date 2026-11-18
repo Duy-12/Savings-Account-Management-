@@ -29,3 +29,6 @@ ehthumbs.db
 dist/
 build/
 *.tmp
+
+# AI Assistant Local Rules
+.agents/
