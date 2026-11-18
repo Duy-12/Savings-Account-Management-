@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const env = require('../../config/env');
 const { withTransaction } = require('../../config/db');
-const { ACCOUNT_STATUS, ROLES } = require('../../config/constants');
+const { ACCOUNT_STATUS, ROLES, isAccountCurrentlyLocked } = require('../../config/constants');
 const { AppError } = require('../../middlewares/error.middleware');
 const taiKhoanRepo = require('../../repositories/taiKhoan.repo');
 
@@ -24,17 +24,24 @@ async function login(tenDangNhap, matKhau) {
         throw new AppError(403, 'FORBIDDEN', 'Tài khoản đã bị vô hiệu hóa.');
     }
 
-    // Kiểm tra trạng thái khóa tạm thời
-    if (
-        account.trang_thai === ACCOUNT_STATUS.TEMP_LOCKED &&
-        account.khoa_den &&
-        new Date(account.khoa_den) > new Date()
-    ) {
+    // Kiểm tra trạng thái khóa (cả khóa thủ công bởi Admin lẫn khóa tự động 15 phút)
+    if (isAccountCurrentlyLocked(account)) {
         throw new AppError(
             423,
             'ACCOUNT_LOCKED',
-            'Tài khoản đang bị khóa tạm thời do nhập sai nhiều lần. Vui lòng thử lại sau.'
+            account.khoa_den
+                ? 'Tài khoản đang bị khóa tạm thời do nhập sai nhiều lần. Vui lòng thử lại sau.'
+                : 'Tài khoản đang bị khóa bởi quản trị viên.'
         );
+    }
+
+    // Nếu khóa tự động đã hết thời gian chờ -> mở lại chu kỳ đếm sai trước khi đối chiếu mật khẩu
+    if (
+        account.trang_thai === ACCOUNT_STATUS.TEMP_LOCKED &&
+        account.khoa_den &&
+        new Date(account.khoa_den) <= new Date()
+    ) {
+        await taiKhoanRepo.moKhoaHetHan(account.tai_khoan_id);
     }
 
     const isPasswordValid = await bcrypt.compare(matKhau, account.mat_khau_bam);

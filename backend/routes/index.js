@@ -6,6 +6,10 @@ const express = require('express');
 const { testConnection } = require('../config/db');
 const authRoutes = require('./auth.routes');
 const profileRoutes = require('./profile.routes');
+const savingsRoutes = require('./savings.routes');
+const interestRoutes = require('./interest.routes');
+const customersRoutes = require('./customers.routes');
+const adminRoutes = require('./admin.routes');
 
 const router = express.Router();
 
@@ -23,9 +27,13 @@ router.get('/health', async (req, res) => {
     });
 });
 
-// Chặng 1: Auth & Profile
+// Mount REST API Routes
 router.use('/auth', authRoutes);
 router.use('/profile', profileRoutes);
+router.use('/savings', savingsRoutes);
+router.use('/interest', interestRoutes);
+router.use('/customers', customersRoutes);
+router.use('/', adminRoutes);
 
 // Các chặng tiếp theo (TV2 + Bạn sẽ mount tại đây):
 // router.use('/savings', savingsRoutes);

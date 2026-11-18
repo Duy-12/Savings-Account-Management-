@@ -4,7 +4,7 @@
  */
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
-const { ACCOUNT_STATUS } = require('../config/constants');
+const { ACCOUNT_STATUS, isAccountCurrentlyLocked } = require('../config/constants');
 const { AppError, asyncHandler } = require('./error.middleware');
 const taiKhoanRepo = require('../repositories/taiKhoan.repo');
 
@@ -26,13 +26,8 @@ const authenticate = asyncHandler(async (req, res, next) => {
         throw new AppError(401, 'UNAUTHORIZED', 'Tài khoản không tồn tại hoặc đã bị xóa.');
     }
 
-    const isTempLocked =
-        account.trang_thai === ACCOUNT_STATUS.TEMP_LOCKED &&
-        account.khoa_den &&
-        new Date(account.khoa_den) > new Date();
-
-    if (isTempLocked) {
-        throw new AppError(423, 'ACCOUNT_LOCKED', 'Tài khoản đang bị khóa tạm thời.');
+    if (isAccountCurrentlyLocked(account)) {
+        throw new AppError(423, 'ACCOUNT_LOCKED', 'Tài khoản đang bị khóa.');
     }
 
     if (account.trang_thai === ACCOUNT_STATUS.INACTIVE) {

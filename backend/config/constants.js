@@ -84,6 +84,17 @@ const NOTIFY_STATUS = Object.freeze({
     FAILED: 'THAT_BAI'
 });
 
+/**
+ * Kiểm tra tài khoản có đang ở trạng thái khóa tạm thời hiệu lực hay không:
+ * - Khóa thủ công bởi Admin: trang_thai === KHOA_TAM_THOI và khoa_den === null -> đang khóa
+ * - Khóa tự động (EX-01): trang_thai === KHOA_TAM_THOI và khoa_den > now -> đang khóa
+ */
+function isAccountCurrentlyLocked(account, now = new Date()) {
+    if (!account || account.trang_thai !== ACCOUNT_STATUS.TEMP_LOCKED) return false;
+    if (!account.khoa_den) return true;
+    return new Date(account.khoa_den) > now;
+}
+
 module.exports = {
     ROLES,
     PERMISSIONS,
@@ -96,5 +107,6 @@ module.exports = {
     SETTLEMENT_TYPE,
     SETTLEMENT_STATUS,
     NOTIFY_TYPE,
-    NOTIFY_STATUS
+    NOTIFY_STATUS,
+    isAccountCurrentlyLocked
 };

@@ -11,6 +11,7 @@ const path = require('path');
 
 const env = require('./config/env');
 const apiRoutes = require('./routes');
+const { startScheduler } = require('./jobs/scheduler');
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
@@ -50,6 +51,7 @@ if (require.main === module) {
         console.log(`🚀 CoreSavings API đang chạy tại: http://localhost:${env.port}`);
         console.log(`🌐 Mở giao diện frontend tại: http://localhost:${env.port}/index.html`);
         console.log(`🩺 Kiểm tra Health & MySQL tại: http://localhost:${env.port}/api/health`);
+        startScheduler();
     });
 }
 
