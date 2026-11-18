@@ -141,6 +141,7 @@ CREATE TABLE `TAI_KHOAN_THANH_TOAN` (
     `tai_khoan_thanh_toan_id` INT AUTO_INCREMENT,
     `khach_hang_id` INT NOT NULL,
     `so_tai_khoan` VARCHAR(255) NOT NULL UNIQUE,
+    `so_du` DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
     `ma_ngan_hang` VARCHAR(255) DEFAULT 'SAVINGS_BANK',
     `loai_tien` VARCHAR(255) DEFAULT 'VND',
     `trang_thai` VARCHAR(255) DEFAULT 'HOAT_DONG',
@@ -199,7 +200,7 @@ DROP TABLE IF EXISTS `SO_TIET_KIEM`;
 CREATE TABLE `SO_TIET_KIEM` (
     `so_tiet_kiem_id` INT AUTO_INCREMENT,
     `khach_hang_id` INT NOT NULL,
-    `nhan_vien_mo_id` INT NOT NULL,
+    `nhan_vien_mo_id` INT NULL, -- NULL khi mở trực tuyến (FR-03), có ID khi mở tại quầy (FR-04)
     `ma_so` VARCHAR(255) UNIQUE NOT NULL,
     `ngay_mo` DATE NOT NULL,
     `trang_thai` VARCHAR(255) DEFAULT 'DANG_HOAT_DONG', -- DANG_HOAT_DONG, PHONG_TOA, DA_TAT_TOAN
@@ -385,10 +386,10 @@ INSERT INTO `VAI_TRO_QUYEN` (`vai_tro_id`, `quyen_id`) VALUES
 (3, 3), (3, 4);
 
 -- 7. Tài khoản thanh toán (CASA)
-INSERT INTO `TAI_KHOAN_THANH_TOAN` (`tai_khoan_thanh_toan_id`, `khach_hang_id`, `so_tai_khoan`, `ma_ngan_hang`, `loai_tien`, `trang_thai`, `tai_khoan_mac_dinh`) VALUES
-(1, 1, '1019283746', 'SAVINGS_BANK', 'VND', 'HOAT_DONG', TRUE),
-(2, 2, '2028374651', 'SAVINGS_BANK', 'VND', 'HOAT_DONG', TRUE),
-(3, 3, '3037465819', 'SAVINGS_BANK', 'VND', 'HOAT_DONG', TRUE);
+INSERT INTO `TAI_KHOAN_THANH_TOAN` (`tai_khoan_thanh_toan_id`, `khach_hang_id`, `so_tai_khoan`, `so_du`, `ma_ngan_hang`, `loai_tien`, `trang_thai`, `tai_khoan_mac_dinh`) VALUES
+(1, 1, '1019283746', 150000000.00, 'SAVINGS_BANK', 'VND', 'HOAT_DONG', TRUE),
+(2, 2, '2028374651', 50000000.00, 'SAVINGS_BANK', 'VND', 'HOAT_DONG', TRUE),
+(3, 3, '3037465819', 200000000.00, 'SAVINGS_BANK', 'VND', 'HOAT_DONG', TRUE);
 
 -- 8. Sản phẩm tiết kiệm
 INSERT INTO `SAN_PHAM_TIET_KIEM` (`san_pham_id`, `ten_san_pham`, `so_tien_toi_thieu`, `loai_tien`, `trang_thai`) VALUES
