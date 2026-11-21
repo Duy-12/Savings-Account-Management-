@@ -108,6 +108,19 @@ async function previewSettlement(maSo, currentUser, ngayTatToanInput) {
  * Bước 2 (FR-07 / EX-03): Xác nhận tất toán sổ bên trong ACID Transaction (FOR UPDATE)
  */
 async function confirmSettlement(maSo, currentUser, { ngayTatToan: ngayInput, hinhThucNhan = 'CHUYEN_KHOAN', taiKhoanNhanId }) {
+    const allowedMethods = new Set(['CHUYEN_KHOAN', 'TAI_QUAY']);
+    if (!allowedMethods.has(hinhThucNhan)) {
+        throw new AppError(400, 'VALIDATION_ERROR', 'Hình thức nhận tiền tất toán không hợp lệ.');
+    }
+
+    if (isCustomerOnly(currentUser) && hinhThucNhan !== 'CHUYEN_KHOAN') {
+        throw new AppError(
+            403,
+            'FORBIDDEN',
+            'Khách hàng tất toán trực tuyến chỉ hỗ trợ nhận tiền qua chuyển khoản về tài khoản thanh toán.'
+        );
+    }
+
     const ngayTatToan = ngayInput || new Date().toISOString().slice(0, 10);
     const nonTermRate = await laiSuatRepo.layLaiSuatKhongKyHan();
 

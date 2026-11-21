@@ -22,7 +22,7 @@ router.get(
 
 router.post(
     '/accounts',
-    authorizeRoles(ROLES.ADMIN),
+    authorizeRoles(ROLES.SUPERVISOR, ROLES.ADMIN),
     requireBodyFields(['hoTen', 'email', 'tenDangNhap', 'matKhau', 'vaiTro']),
     validateBody((body) => {
         const errors = [];
@@ -36,7 +36,7 @@ router.post(
 
 router.patch(
     '/accounts/:id',
-    authorizeRoles(ROLES.ADMIN),
+    authorizeRoles(ROLES.SUPERVISOR, ROLES.ADMIN),
     adminController.updateAccount
 );
 

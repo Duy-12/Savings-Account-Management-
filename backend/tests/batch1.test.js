@@ -221,4 +221,37 @@ describe('Gói 1 — Rate Config, Admin RBAC Guardrails (FR-11, FR-12)', () => {
             }
         );
     });
+
+    it('chặn KIEM_SOAT_VIEN tạo hoặc chỉnh sửa tài khoản cấp ADMIN (403)', async () => {
+        await assert.rejects(
+            () =>
+                adminAccountService.createAccount(
+                    {
+                        hoTen: 'Test Admin',
+                        email: 'admin2@savingsbank.vn',
+                        tenDangNhap: 'admin_new',
+                        matKhau: 'Admin@123',
+                        vaiTro: ROLES.ADMIN
+                    },
+                    { taiKhoanId: 3, roles: [ROLES.SUPERVISOR] }
+                ),
+            (err) => err.statusCode === 403 && err.errorCode === 'FORBIDDEN'
+        );
+
+        mock.method(taiKhoanRepo, 'layThongTinTaiKhoanTheoId', async () => ({
+            tai_khoan_id: 1,
+            trang_thai: ACCOUNT_STATUS.ACTIVE,
+            roles: [ROLES.ADMIN]
+        }));
+
+        await assert.rejects(
+            () =>
+                adminAccountService.updateAccountAccess(
+                    1,
+                    { trangThai: ACCOUNT_STATUS.TEMP_LOCKED },
+                    { taiKhoanId: 3, roles: [ROLES.SUPERVISOR] }
+                ),
+            (err) => err.statusCode === 403 && err.errorCode === 'FORBIDDEN'
+        );
+    });
 });

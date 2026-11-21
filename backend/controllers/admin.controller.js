@@ -20,7 +20,7 @@ const listAccounts = asyncHandler(async (req, res) => {
 });
 
 const createAccount = asyncHandler(async (req, res) => {
-    const data = await adminAccountService.createAccount(req.body);
+    const data = await adminAccountService.createAccount(req.body, req.user);
     res.status(201).json({
         success: true,
         message: 'Tạo tài khoản và gán vai trò thành công.',

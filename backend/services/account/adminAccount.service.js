@@ -12,13 +12,21 @@ const taiKhoanRepo = require('../../repositories/taiKhoan.repo');
 const ALLOWED_ROLES = new Set(Object.values(ROLES));
 const ALLOWED_STATUSES = new Set(Object.values(ACCOUNT_STATUS));
 
+function isCallerAdmin(currentUser) {
+    return Boolean(currentUser && Array.isArray(currentUser.roles) && currentUser.roles.includes(ROLES.ADMIN));
+}
+
 async function listAccounts() {
     return taiKhoanRepo.truyVanTatCaTaiKhoan();
 }
 
-async function createAccount({ hoTen, email, soDienThoai, tenDangNhap, matKhau, vaiTro }) {
+async function createAccount({ hoTen, email, soDienThoai, tenDangNhap, matKhau, vaiTro }, currentUser = null) {
     if (!ALLOWED_ROLES.has(vaiTro)) {
         throw new AppError(400, 'VALIDATION_ERROR', 'Vai trò được gán không hợp lệ.');
+    }
+
+    if (currentUser && !isCallerAdmin(currentUser) && vaiTro === ROLES.ADMIN) {
+        throw new AppError(403, 'FORBIDDEN', 'Chỉ Quản trị viên (ADMIN) mới có quyền tạo tài khoản cấp ADMIN.');
     }
 
     const cleanUsername = tenDangNhap.trim();
@@ -61,6 +69,17 @@ async function updateAccountAccess(taiKhoanId, { vaiTro, trangThai }, currentUse
 
     if (currentUser && currentUser.taiKhoanId === id && trangThai && trangThai !== ACCOUNT_STATUS.ACTIVE) {
         throw new AppError(400, 'VALIDATION_ERROR', 'Không thể tự khóa tài khoản quản trị đang đăng nhập.');
+    }
+
+    if (currentUser && !isCallerAdmin(currentUser)) {
+        const targetIsAdmin = Array.isArray(target.roles) && target.roles.includes(ROLES.ADMIN);
+        if (targetIsAdmin || vaiTro === ROLES.ADMIN) {
+            throw new AppError(
+                403,
+                'FORBIDDEN',
+                'Kiểm soát viên không có quyền chỉnh sửa hoặc gán vai trò Quản trị viên (ADMIN).'
+            );
+        }
     }
 
     let vaiTroId = null;

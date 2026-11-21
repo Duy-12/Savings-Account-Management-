@@ -7,7 +7,7 @@ import * as customerApi from '../api/customer.api.js';
 import * as adminApi from '../api/admin.api.js';
 import { store } from '../state/store.js';
 import { $, escapeHtml, toast, withButtonLoading } from '../utils/ui.js';
-import { fmtDate, money, statusBadge, termLabel } from '../utils/format.js';
+import { fmtDate, money, rolloverLabel, statusBadge, termLabel } from '../utils/format.js';
 import { isValidCccd } from '../utils/validators.js';
 
 export async function renderOpenBookPage(container, isOnline, go) {
@@ -120,7 +120,8 @@ export async function renderOpenBookPage(container, isOnline, go) {
               }</button>
             </div>
           </form>
-        </section>`;
+        </section>
+        <section class="panel receipt-card" id="counter-receipt" hidden></section>`;
 
         if (!isOnline) {
             const lookupInput = $('#counter-cccd-lookup', container);
@@ -180,6 +181,7 @@ export async function renderOpenBookPage(container, isOnline, go) {
                                 res.ngayDaoHan ? ` (Đáo hạn: ${fmtDate(res.ngayDaoHan)})` : ''
                             }`
                         );
+                        go('search');
                     } else {
                         const res = await savingsApi.openCounter({
                             soCccd: String(d.soCccd).trim(),
@@ -188,8 +190,41 @@ export async function renderOpenBookPage(container, isOnline, go) {
                             chiThiDaoHan: d.chiThiDaoHan
                         });
                         toast(`Mở sổ tại quầy ${res.maSo} thành công (Chứng từ: ${res.chungTuId}).`);
+                        const selectedTermText = form.kyHanId?.selectedOptions?.[0]?.textContent || '';
+                        const receiptEl = $('#counter-receipt', container);
+                        receiptEl.hidden = false;
+                        receiptEl.innerHTML = `
+                        <div class="panel-head">
+                          <div>
+                            <h3>Chứng từ Xác nhận Mở sổ Tiết kiệm tại Quầy (FR-04)</h3>
+                            <p>Mã chứng từ: <b>${escapeHtml(res.chungTuId)}</b> · Ngày lập: ${fmtDate(res.ngayMo)}</p>
+                          </div>
+                          ${statusBadge('DANG_HOAT_DONG')}
+                        </div>
+                        <div class="grid-2">
+                          <div>
+                            <div class="metric-line"><span>Mã sổ tiết kiệm</span><b>${escapeHtml(res.maSo)}</b></div>
+                            <div class="metric-line"><span>Khách hàng (Chủ sổ)</span><b>${escapeHtml(res.chuSo)}</b></div>
+                            <div class="metric-line"><span>Số CCCD định danh</span><b>${escapeHtml(res.soCccd)}</b></div>
+                            <div class="metric-line"><span>Giao dịch viên lập phiếu</span><b>${escapeHtml(store.user.hoTen)}</b></div>
+                          </div>
+                          <div>
+                            <div class="metric-line"><span>Sản phẩm &amp; kỳ hạn</span><b>${escapeHtml(selectedTermText)}</b></div>
+                            <div class="metric-line"><span>Số tiền gửi gốc</span><b class="positive">${money(res.soTienGoc)}</b></div>
+                            <div class="metric-line"><span>Lãi suất áp dụng</span><b>${Number(res.laiSuatApDung)}%/năm</b></div>
+                            <div class="metric-line"><span>Ngày đáo hạn / Chỉ thị</span><b>${fmtDate(res.ngayDaoHan)} · ${escapeHtml(rolloverLabel(d.chiThiDaoHan))}</b></div>
+                          </div>
+                        </div>
+                        <div class="form-actions no-print">
+                          <button type="button" class="btn btn-light" id="receipt-new-btn">＋ Mở thêm sổ mới</button>
+                          <button type="button" class="btn btn-light" id="receipt-list-btn">Xem danh sách sổ</button>
+                          <button type="button" class="btn btn-primary" id="receipt-print-btn">🖨️ In chứng từ</button>
+                        </div>`;
+                        $('#receipt-print-btn', receiptEl).onclick = () => window.print();
+                        $('#receipt-list-btn', receiptEl).onclick = () => go('search');
+                        $('#receipt-new-btn', receiptEl).onclick = () => renderOpenBookPage(container, false, go);
+                        receiptEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
-                    go('search');
                 } catch (err) {
                     toast(err.message, 'error');
                 }

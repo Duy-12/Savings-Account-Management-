@@ -29,7 +29,7 @@ router.get(
 
 router.post(
     '/',
-    authorizeRoles(ROLES.TELLER, ROLES.ADMIN),
+    authorizeRoles(ROLES.TELLER, ROLES.SUPERVISOR, ROLES.ADMIN),
     requireBodyFields(['hoTen', 'soCccd', 'soDienThoai', 'email']),
     validateCustomerPayload,
     customerController.create
@@ -37,7 +37,7 @@ router.post(
 
 router.put(
     '/:id',
-    authorizeRoles(ROLES.TELLER, ROLES.ADMIN),
+    authorizeRoles(ROLES.TELLER, ROLES.SUPERVISOR, ROLES.ADMIN),
     requireBodyFields(['hoTen', 'soCccd', 'soDienThoai', 'email']),
     validateCustomerPayload,
     customerController.update

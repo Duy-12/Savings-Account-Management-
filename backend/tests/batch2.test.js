@@ -191,6 +191,18 @@ describe('Gói 2 — Tất toán & Trạng thái sổ (FR-07, EX-03, FR-09)', ()
         );
     });
 
+    it('FR-07: chặn KHACH_HANG tất toán nhận tiền mặt tại quầy (TAI_QUAY -> 403)', async () => {
+        await assert.rejects(
+            () =>
+                settlementService.confirmSettlement(
+                    'STK001090',
+                    { taiKhoanId: 4, khachHangId: 1, roles: [ROLES.CUSTOMER] },
+                    { ngayTatToan: '2026-11-21', hinhThucNhan: 'TAI_QUAY' }
+                ),
+            (err) => err.statusCode === 403 && err.errorCode === 'FORBIDDEN'
+        );
+    });
+
     it('FR-09: kiểm tra State Machine chuyển trạng thái hợp lệ và cấm sửa sổ đã tất toán', () => {
         assert.doesNotThrow(() =>
             passbookStatusService.assertValidStatusTransition(PASSBOOK_STATUS.ACTIVE, PASSBOOK_STATUS.FROZEN)

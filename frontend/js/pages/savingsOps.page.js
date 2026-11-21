@@ -4,6 +4,7 @@
  */
 import * as savingsApi from '../api/savings.api.js';
 import * as adminApi from '../api/admin.api.js';
+import { store } from '../state/store.js';
 import { $, $$, escapeHtml, toast, withButtonLoading } from '../utils/ui.js';
 import { fmtDate, money, rolloverLabel, statusBadge, termLabel, today } from '../utils/format.js';
 
@@ -240,6 +241,7 @@ export async function renderSettlementPage(container, go) {
     container.innerHTML = '<div class="panel"><div class="empty">Đang tải danh sách sổ...</div></div>';
 
     try {
+        const isCustomer = store.role === 'KHACH_HANG';
         const books = await savingsApi.listPassbooks({ status: 'DANG_HOAT_DONG' });
         if (!books.length) {
             container.innerHTML =
@@ -277,8 +279,13 @@ export async function renderSettlementPage(container, go) {
               <label>Hình thức nhận tiền</label>
               <select name="hinhThucNhan">
                 <option value="CHUYEN_KHOAN">Chuyển khoản vào tài khoản thanh toán</option>
-                <option value="TAI_QUAY">Nhận tiền mặt tại quầy</option>
+                ${isCustomer ? '' : '<option value="TAI_QUAY">Nhận tiền mặt tại quầy</option>'}
               </select>
+              ${
+                  isCustomer
+                      ? '<small class="hint">Tất toán online chỉ hỗ trợ chuyển khoản về tài khoản thanh toán; muốn nhận tiền mặt vui lòng đến quầy giao dịch.</small>'
+                      : ''
+              }
             </div>
             <div class="field full">
               <div id="settle-preview" class="notice">Đang tính dự kiến tất toán...</div>
@@ -347,7 +354,9 @@ export async function renderSettlementPage(container, go) {
                     : 'Xác nhận tất toán đúng hạn / không kỳ hạn.'
             }</p>
             <div class="notice ${p.isBeforeMaturity ? 'warn' : ''}">
-              Mã sổ: <b>${escapeHtml(p.maSo)}</b><br>
+              Mã sổ: <b>${escapeHtml(p.maSo)}</b> · Hình thức nhận: <b>${
+                  form.hinhThucNhan.value === 'TAI_QUAY' ? 'Nhận tiền mặt tại quầy' : 'Chuyển khoản tài khoản thanh toán'
+              }</b><br>
               Ngày tất toán: <b>${fmtDate(p.ngayTatToan)}</b> (${p.soNgayThucGui} ngày)<br>
               Tiền gốc: <b>${money(p.tienGoc)}</b> · Tiền lãi: <b>${money(p.tienLai)}</b><br>
               Tổng số tiền thực nhận: <b>${money(p.tongTienNhan)}</b>

@@ -9,6 +9,65 @@ import { $, $$, escapeHtml, toast, withButtonLoading } from '../utils/ui.js';
 import { downloadCSV, fmtDate, money, roleNames, statusBadge, termLabel, today } from '../utils/format.js';
 import { buildPassbooksTableHtml } from './dashboard.page.js';
 
+function buildReportChartsHtml(summary, rows) {
+    const statusItems = [
+        ['DANG_HOAT_DONG', 'Đang hoạt động', '#13845b'],
+        ['PHONG_TOA', 'Phong tỏa', '#a76508'],
+        ['BAO_MAT', 'Báo mất', '#c13e48'],
+        ['DA_TAT_TOAN', 'Đã tất toán', '#2463eb']
+    ];
+    const counts = statusItems.map(([code, label, color]) => ({
+        label,
+        color,
+        count: rows.filter((r) => r.trang_thai === code).length
+    }));
+    const maxCount = Math.max(1, ...counts.map((c) => c.count));
+
+    const flowItems = [
+        ['Tổng gốc danh mục', Number(summary.totalPrincipal || 0), '#2463eb'],
+        ['Tổng thu gửi mới', Number(summary.totalDeposits || 0), '#13845b'],
+        ['Tổng chi gốc tất toán', Number(summary.totalWithdrawnPrincipal || 0), '#a76508'],
+        ['Tổng chi trả lãi', Number(summary.totalInterestPaid || 0), '#7c3aed']
+    ];
+    const maxFlow = Math.max(1, ...flowItems.map(([, val]) => val));
+
+    return `
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h4>Phân bố số lượng sổ theo trạng thái</h4>
+        <div class="bar-list">
+          ${counts
+              .map(
+                  (c) => `
+            <div class="bar-row">
+              <div class="bar-meta"><span>${escapeHtml(c.label)}</span><b>${c.count} sổ</b></div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(
+                  (c.count / maxCount) * 100
+              )}%;background:${c.color}"></div></div>
+            </div>`
+              )
+              .join('')}
+        </div>
+      </div>
+      <div class="chart-box">
+        <h4>Biểu đồ quy mô dòng tiền trong kỳ</h4>
+        <div class="bar-list">
+          ${flowItems
+              .map(
+                  ([label, val, color]) => `
+            <div class="bar-row">
+              <div class="bar-meta"><span>${escapeHtml(label)}</span><b>${money(val)}</b></div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(
+                  (val / maxFlow) * 100
+              )}%;background:${color}"></div></div>
+            </div>`
+              )
+              .join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
 export async function renderReportsPage(container) {
     container.innerHTML = `
     <section class="panel">
@@ -66,6 +125,7 @@ export async function renderReportsPage(container) {
                   <div class="stat"><div class="stat-head">Tổng thu gửi trong kỳ</div><div class="stat-value positive">${money(s.totalDeposits)}</div></div>
                   <div class="stat"><div class="stat-head">Tổng chi trả lãi</div><div class="stat-value">${money(s.totalInterestPaid)}</div></div>
                 </div>
+                ${buildReportChartsHtml(s, rows)}
                 <div style="margin-top:15px">${buildPassbooksTableHtml(rows)}</div>`;
 
                 $('#export-report', resultEl).onclick = () => {
@@ -103,12 +163,13 @@ export async function renderAccountsPage(container) {
     try {
         const accounts = await adminApi.listAccounts();
         const isAdmin = store.role === 'ADMIN';
+        const canManage = ['ADMIN', 'KIEM_SOAT_VIEN'].includes(store.role);
 
         container.innerHTML = `
         <section class="panel">
           <div class="panel-head">
             <div><h3>Tài khoản người dùng &amp; phân quyền (FR-11)</h3><p>Quản lý vai trò RBAC và trạng thái khóa tài khoản.</p></div>
-            ${isAdmin ? '<button class="btn btn-primary btn-sm" id="new-account">＋ Tạo tài khoản</button>' : ''}
+            ${canManage ? '<button class="btn btn-primary btn-sm" id="new-account">＋ Tạo tài khoản</button>' : ''}
           </div>
           <div class="table-wrap">
             <table>
@@ -119,6 +180,8 @@ export async function renderAccountsPage(container) {
                 ${accounts
                     .map((a) => {
                         const roleCode = (a.roles && a.roles[0]) || 'KHACH_HANG';
+                        const isTargetAdmin = Array.isArray(a.roles) && a.roles.includes('ADMIN');
+                        const canEditRow = isAdmin || (canManage && !isTargetAdmin);
                         return `
                         <tr>
                           <td class="strong">${escapeHtml(a.ten_dang_nhap)}</td>
@@ -127,9 +190,11 @@ export async function renderAccountsPage(container) {
                           <td>${escapeHtml(roleNames[roleCode] || roleCode)}</td>
                           <td>${statusBadge(a.trang_thai)}</td>
                           <td>${
-                              isAdmin
+                              canEditRow
                                   ? `<button class="btn btn-light btn-sm" data-acc-id="${a.tai_khoan_id}">Phân quyền</button>`
-                                  : ''
+                                  : canManage
+                                    ? '<span class="sub">Chỉ Admin</span>'
+                                    : ''
                           }</td>
                         </tr>`;
                     })
@@ -149,11 +214,11 @@ export async function renderAccountsPage(container) {
                     ['Xem sổ cá nhân', '✓', '✓', '✓', '✓'],
                     ['Mở sổ online', '✓', '—', '—', '—'],
                     ['Mở sổ tại quầy', '—', '✓', '—', '✓'],
-                    ['Tất toán sổ', '✓ (chính chủ)', '✓', '✓', '✓'],
+                    ['Tất toán sổ', '✓ (Chuyển khoản)', '✓', '✓', '✓'],
                     ['Quản lý khách hàng', '—', '✓', '✓', '✓'],
                     ['Báo cáo & thống kê', '—', '✓', '✓', '✓'],
                     ['Cấu hình lãi suất & Jobs', '—', '—', '✓', '✓'],
-                    ['Tài khoản & phân quyền', '—', '—', 'Chỉ xem', '✓']
+                    ['Tài khoản & phân quyền', '—', '—', '✓ (Trừ Admin)', '✓']
                 ]
                     .map((r) => `<tr>${r.map((v) => `<td>${v}</td>`).join('')}</tr>`)
                     .join('')}
@@ -162,15 +227,16 @@ export async function renderAccountsPage(container) {
           </div>
         </section>`;
 
-        if (isAdmin) {
+        if (canManage) {
             const editor = $('#account-editor', container);
+            const assignableRoles = Object.entries(roleNames).filter(([k]) => isAdmin || k !== 'ADMIN');
 
             function openAccountEditor(account = null) {
                 const isEdit = Boolean(account);
                 const currentRole = (account?.roles && account.roles[0]) || 'GIAO_DICH_VIEN';
                 editor.hidden = false;
                 editor.innerHTML = `
-                <h3>${isEdit ? `Cập nhật quyền & trạng thái: ${escapeHtml(account.ten_dang_nhap)}` : 'Tạo tài khoản nội bộ mới'}</h3>
+                <h3>${isEdit ? `Cập nhật quyền & trạng thái: ${escapeHtml(account.ten_dang_nhap)}` : 'Tạo tài khoản mới'}</h3>
                 <form id="account-form" class="form-grid" style="margin-top:14px">
                   ${
                       isEdit
@@ -183,7 +249,7 @@ export async function renderAccountsPage(container) {
                   <div class="field">
                     <label>Vai trò</label>
                     <select name="vaiTro">
-                      ${Object.entries(roleNames)
+                      ${assignableRoles
                           .map(
                               ([k, v]) =>
                                   `<option value="${k}" ${k === currentRole ? 'selected' : ''}>${escapeHtml(v)}</option>`

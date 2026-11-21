@@ -53,8 +53,8 @@ Mọi endpoint đều trả về cấu trúc JSON thống nhất để `frontend
 | **FR-02** | `GET /api/profile` | Authenticated | — | `{ hoTen, soCccd, ngaySinh, soDienThoai, email, diaChi, vaiTro }` |
 | **FR-02** | `PUT /api/profile` | Authenticated | `{ hoTen, soDienThoai, email, diaChi }` *(khóa CCCD & role)* | Hồ sơ sau cập nhật |
 | **FR-11** | `GET /api/accounts` | `ADMIN`, `KIEM_SOAT_VIEN` | — | Danh sách tài khoản kèm vai trò và trạng thái |
-| **FR-11** | `POST /api/accounts` | `ADMIN` | `{ hoTen, email, soDienThoai, tenDangNhap, matKhau, vaiTro }` | Tài khoản vừa tạo |
-| **FR-11** | `PATCH /api/accounts/:id` | `ADMIN` | `{ vaiTro, trangThai }` (`HOAT_DONG` / `KHOA_TAM_THOI`) | Tài khoản sau phân quyền |
+| **FR-11** | `POST /api/accounts` | `ADMIN`, `KIEM_SOAT_VIEN` *(trừ role `ADMIN`)* | `{ hoTen, email, soDienThoai, tenDangNhap, matKhau, vaiTro }` | Tài khoản vừa tạo |
+| **FR-11** | `PATCH /api/accounts/:id` | `ADMIN`, `KIEM_SOAT_VIEN` *(trừ tài khoản `ADMIN`)* | `{ vaiTro, trangThai }` (`HOAT_DONG` / `KHOA_TAM_THOI`) | Tài khoản sau phân quyền |
 
 ---
 
@@ -67,7 +67,7 @@ Mọi endpoint đều trả về cấu trúc JSON thống nhất để `frontend
 | **FR-04** | `POST /api/savings/open-counter` | `GIAO_DICH_VIEN`, `ADMIN` | `{ soCccd, kyHanId, soTienGui, chiThiDaoHan }` | `{ maSo, chuSo, soTienGoc, laiSuatApDung, ngayMo, ngayDaoHan, chungTuId }` |
 | **FR-06** | `POST /api/interest/calculate` | Authenticated | `{ soTienGoc, kyHanId, laiSuatNam?, ngayBatDau, ngayTinhDen }` | `{ soNgayGui, laiSuatApDung, tienLaiDuKien, tongGocVaLai }` |
 | **FR-07 / EX-03 (Bước 1)** | `POST /api/savings/:maSo/settlement-preview` | `KHACH_HANG` *(chính chủ)*, `GIAO_DICH_VIEN`, `KIEM_SOAT_VIEN`, `ADMIN` | `{ ngayTatToan }` *(mặc định hôm nay)* | `{ maSo, trangThai, isBeforeMaturity, canhBao, soNgayThucGui, tienGoc, laiSuatApDung, tienLai, tongTienNhan }` |
-| **FR-07 / EX-03 (Bước 2)** | `POST /api/savings/:maSo/settlement-confirm` | `KHACH_HANG` *(chính chủ)*, `GIAO_DICH_VIEN`, `KIEM_SOAT_VIEN`, `ADMIN` | `{ ngayTatToan, hinhThucNhan: "CHUYEN_KHOAN" \| "TAI_QUAY", taiKhoanNhanId? }` | `{ maSo, trangThai: "DA_TAT_TOAN", giaoDichId, tienGoc, tienLai, tongTienThucNhan, ngayTatToan }` |
+| **FR-07 / EX-03 (Bước 2)** | `POST /api/savings/:maSo/settlement-confirm` | `KHACH_HANG` *(chính chủ, chỉ `CHUYEN_KHOAN`)*, `GIAO_DICH_VIEN`, `KIEM_SOAT_VIEN`, `ADMIN` | `{ ngayTatToan, hinhThucNhan: "CHUYEN_KHOAN" \| "TAI_QUAY", taiKhoanNhanId? }` | `{ maSo, trangThai: "DA_TAT_TOAN", giaoDichId, tienGoc, tienLai, tongTienThucNhan, ngayTatToan }` |
 
 > **Lưu ý nghiệp vụ `FR-03` & `FR-07`:**  
 > - `chiThiDaoHan` nhận một trong 3 giá trị: `TAI_TUC_GOC_VA_LAI`, `TAI_TUC_GOC_CHUYEN_LAI`, `KHONG_TAI_TUC`.  
@@ -82,8 +82,8 @@ Mọi endpoint đều trả về cấu trúc JSON thống nhất để `frontend
 | **FR-05** | `GET /api/savings` | Authenticated | `?q=<maSo\|cccd\|hoTen>&status=<trangThai>` | Danh sách sổ *(KH chỉ thấy sổ của mình)* kèm `tienLaiTamTinh` (`FR-06`) |
 | **FR-05** | `GET /api/savings/:maSo` | Authenticated *(kiểm tra ownership nếu là KH)* | — | Chi tiết sổ + danh sách chu kỳ + lịch sử giao dịch + lịch sử trạng thái |
 | **FR-08** | `GET /api/customers` | `GIAO_DICH_VIEN`, `KIEM_SOAT_VIEN`, `ADMIN` | `?cccd=<so_cccd>&q=<tuKhoa>` | Danh sách hồ sơ khách hàng |
-| **FR-08** | `POST /api/customers` | `GIAO_DICH_VIEN`, `ADMIN` | `{ hoTen, soCccd, ngaySinh, soDienThoai, email, diaChi }` | Khách hàng mới vừa tạo |
-| **FR-08** | `PUT /api/customers/:id` | `GIAO_DICH_VIEN`, `ADMIN` | `{ hoTen, soCccd, ngaySinh, soDienThoai, email, diaChi }` | Khách hàng sau cập nhật |
+| **FR-08** | `POST /api/customers` | `GIAO_DICH_VIEN`, `KIEM_SOAT_VIEN`, `ADMIN` | `{ hoTen, soCccd, ngaySinh, soDienThoai, email, diaChi }` | Khách hàng mới vừa tạo |
+| **FR-08** | `PUT /api/customers/:id` | `GIAO_DICH_VIEN`, `KIEM_SOAT_VIEN`, `ADMIN` | `{ hoTen, soCccd, ngaySinh, soDienThoai, email, diaChi }` | Khách hàng sau cập nhật |
 | **FR-09** | `PATCH /api/savings/:maSo/status` | `GIAO_DICH_VIEN`, `KIEM_SOAT_VIEN`, `ADMIN` | `{ trangThaiMoi, lyDo }` | `{ maSo, trangThaiCu, trangThaiMoi, lichSuId }` |
 
 ---
