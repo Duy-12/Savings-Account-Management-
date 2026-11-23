@@ -115,32 +115,50 @@ npm install
 
 ---
 
-### Bước 4: Cấu hình kết nối MySQL
+### Bước 4: Cấu hình kết nối MySQL & Khởi tạo Mật khẩu Mẫu
 
-1. Tạo file cấu hình từ file mẫu:
+1. Tạo file môi trường `.env` trong `backend/` từ file mẫu:
    ```bash
    # Trên Windows PowerShell / Command Prompt:
-   copy config\db.config.example.js config\db.config.js
+   copy backend\.env.example backend\.env
    ```
-2. Mở file `backend/config/db.config.js` và kiểm tra lại `user` (mặc định `root`) và `password` MySQL tương ứng với máy tính của bạn.
+2. Mở `backend/.env` và cập nhật thông số MySQL (`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=quan_ly_so_tiet_kiem`) cùng `JWT_SECRET`.
+3. Chạy script băm mật khẩu chuẩn `bcryptjs` cho 4 tài khoản mẫu trong MySQL:
+   ```bash
+   npm --prefix backend run seed
+   ```
 
 ---
 
 ### Bước 5: Khởi chạy ứng dụng (Local Development)
 
-1. **Khởi chạy Backend Server:**
-   Tại thư mục `backend/`, chạy lệnh:
-
+1. **Khởi chạy toàn bộ hệ thống (Backend API + Giao diện Frontend):**
    ```bash
-   npm start
+   npm --prefix backend run dev
+   ```
+   _(Hoặc chạy chế độ thường: `npm --prefix backend start`)_
+
+2. **Kiểm tra & Truy cập Giao diện:**
+   - Kiểm tra kết nối API & MySQL: `http://localhost:3000/api/health`
+   - Mở trình duyệt truy cập ứng dụng: 👉 **`http://localhost:3000/index.html`**
+
+3. **Chạy bộ kiểm thử tự động Backend:**
+   ```bash
+   npm --prefix backend test
    ```
 
-   _Màn hình hiển thị: `🚀 Server đang chạy tại: http://localhost:3000`_
+---
 
-2. **Truy cập Giao diện Frontend:**
-   - **Cách 1 (Qua Backend Server):** Mở trình duyệt web và truy cập:  
-     👉 **`http://localhost:3000/index.html`**
-   - **Cách 2 (Mở độc lập với Live Server):** Mở thư mục dự án trên VS Code, nhấp chuột phải vào file `frontend/index.html` chọn **Open with Live Server**.
+## 🔑 Tài khoản Mẫu để Kiểm thử (Demo Accounts)
+
+Sau khi import `backend/database/schema.sql` và chạy `npm --prefix backend run seed`, bạn có thể dùng 4 tài khoản dưới đây để đăng nhập kiểm thử theo từng vai trò:
+
+| Vai trò | Tên đăng nhập | Mật khẩu | Họ tên hiển thị |
+| :--- | :--- | :--- | :--- |
+| **Khách hàng (`KHACH_HANG`)** | `kh_mai` | `Khachhang@123` | Trần Thị Mai |
+| **Giao dịch viên (`GIAO_DICH_VIEN`)** | `teller01` | `Nhanvien@123` | Nguyễn Văn A (Giao dịch viên) |
+| **Quản lý / Kiểm soát viên (`KIEM_SOAT_VIEN`)** | `supervisor01` | `Quanly@123` | Lê Thị B (Kiểm soát viên) |
+| **Quản trị viên (`ADMIN`)** | `admin` | `Admin@123` | Hệ thống Quản trị (Admin) |
 
 ---
 

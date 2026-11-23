@@ -120,7 +120,7 @@ describe('Gói 3 — Báo cáo, Nhắc đáo hạn & Tái tục tự động (FR
         assert.equal(capturedNextMaturity, '2027-02-01');
     });
 
-    it('FR-10: báo cáo SO_DEN_HAN lọc theo khoảng ngay_dao_han thay vì ngay_mo', async () => {
+    it('FR-10: phân biệt rõ điều kiện lọc TONG_HOP (<= to), SO_MO_MOI (BETWEEN) và SO_DEN_HAN (ngay_dao_han)', async () => {
         const capturedSqls = [];
         mock.method(db.pool, 'execute', async (sql, params) => {
             capturedSqls.push({ sql, params });
@@ -133,9 +133,53 @@ describe('Gói 3 — Báo cáo, Nhắc đáo hạn & Tái tục tự động (FR
             from: '2026-11-01',
             to: '2026-11-30'
         });
-
         assert.ok(capturedSqls[0].sql.includes('ck.ngay_dao_han BETWEEN ? AND ?'));
-        assert.equal(capturedSqls[0].sql.includes('stk.ngay_mo BETWEEN'), false);
+
+        await heThongRepo.tongHopDuLieuBaoCao({
+            loaiBaoCao: 'SO_MO_MOI',
+            trangThai: 'ALL',
+            from: '2026-11-01',
+            to: '2026-11-30'
+        });
+        assert.ok(capturedSqls[2].sql.includes('stk.ngay_mo BETWEEN ? AND ?'));
+
+        await heThongRepo.tongHopDuLieuBaoCao({
+            loaiBaoCao: 'TONG_HOP',
+            trangThai: 'ALL',
+            from: '2026-11-01',
+            to: '2026-11-30'
+        });
+        assert.ok(capturedSqls[4].sql.includes('stk.ngay_mo <= ?'));
+        assert.deepEqual(capturedSqls[4].params, ['2026-11-30']);
+    });
+
+    it('FR-08: capNhatKhachHang tự động INSERT HO_SO_KHACH_HANG nếu khách hàng chưa có dòng hồ sơ CCCD', async () => {
+        const khachHangRepo = require('../repositories/khachHang.repo');
+        const executedSqls = [];
+        const fakeConn = {
+            execute: async (sql) => {
+                executedSqls.push(sql);
+                if (sql.includes('UPDATE HO_SO_KHACH_HANG')) return [{ affectedRows: 0 }];
+                if (sql.includes('INSERT INTO HO_SO_KHACH_HANG')) return [{ insertId: 99 }];
+                return [[{ khach_hang_id: 12, ho_ten: 'Khách Bổ Sung CCCD', so_cccd: '079123456789' }]];
+            }
+        };
+
+        const updated = await khachHangRepo.capNhatKhachHang(
+            12,
+            {
+                hoTen: 'Khách Bổ Sung CCCD',
+                email: 'kh12@example.com',
+                soDienThoai: '0901112233',
+                soCccd: '079123456789',
+                ngaySinh: '1995-05-10',
+                diaChi: 'TP.HCM'
+            },
+            fakeConn
+        );
+
+        assert.ok(executedSqls.some((s) => s.includes('INSERT INTO HO_SO_KHACH_HANG')));
+        assert.equal(updated.so_cccd, '079123456789');
     });
 
     it('FR-11: Admin tạo tài khoản KHACH_HANG tự động khởi tạo TAI_KHOAN_THANH_TOAN mặc định', async () => {

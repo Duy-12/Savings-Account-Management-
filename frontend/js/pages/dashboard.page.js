@@ -80,7 +80,7 @@ export async function renderDashboardPage(container, go) {
               ${
                   isCustomer
                       ? `Số dư tài khoản thanh toán khả dụng: <b>${money(casaBalance)}</b>`
-                      : 'Theo dõi hoạt động và quản lý nghiệp vụ sổ tiết kiệm Core Banking.'
+                      : 'Theo dõi danh mục tiền gửi và hỗ trợ giao dịch tiết kiệm cho khách hàng.'
               }
             </p>
           </div>
@@ -106,7 +106,7 @@ export async function renderDashboardPage(container, go) {
           <div class="stat">
             <div class="stat-head">Kỳ hạn tiết kiệm <span class="stat-icon">％</span></div>
             <div class="stat-value">${rates.length}</div>
-            <div class="stat-note">Biểu lãi suất hiệu lực từ MySQL</div>
+            <div class="stat-note">Đang áp dụng theo biểu hiện hành</div>
           </div>
         </div>
 
@@ -115,7 +115,7 @@ export async function renderDashboardPage(container, go) {
             <div class="panel-head">
               <div>
                 <h3>${isCustomer ? 'Sổ tiết kiệm của tôi' : 'Sổ tiết kiệm gần đây'}</h3>
-                <p>Dữ liệu thời gian thực từ cơ sở dữ liệu MySQL</p>
+                <p>Số liệu được cập nhật theo thời gian thực</p>
               </div>
               <button class="btn btn-light btn-sm" data-goto="search">Xem tất cả →</button>
             </div>
@@ -141,7 +141,7 @@ export async function renderDashboardPage(container, go) {
               </button>
             </div>
             <div class="notice success" style="margin-top:13px">
-              Hệ thống đang kết nối trực tiếp REST API &amp; MySQL Transaction ACID.
+              Mọi giao dịch mở sổ, tính lãi và tất toán đều được kiểm tra và ghi nhận tức thì.
             </div>
           </section>
         </div>`;

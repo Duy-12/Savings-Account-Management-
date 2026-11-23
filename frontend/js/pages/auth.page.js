@@ -29,7 +29,7 @@ function renderLoginFormHtml() {
 function renderRegisterFormHtml() {
     return `
     <h3 class="auth-title">Đăng ký tài khoản khách hàng</h3>
-    <p class="auth-description">Tạo tài khoản thực tế trên hệ thống MySQL để mở sổ và tra cứu trực tuyến.</p>
+    <p class="auth-description">Mở tài khoản trực tuyến để gửi tiết kiệm và theo dõi sổ mọi lúc, mọi nơi.</p>
     <form id="register-form" class="auth-form">
       <div class="field">
         <label>Họ và tên</label>
@@ -59,7 +59,7 @@ function renderRegisterFormHtml() {
         <label>Xác nhận mật khẩu</label>
         <input name="confirmPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="Nhập lại mật khẩu">
       </div>
-      <p class="form-hint">Vai trò được gán tự động tại máy chủ là <b>Khách hàng (KHACH_HANG)</b>.</p>
+      <p class="form-hint">Tài khoản đăng ký trực tuyến sẽ được kích hoạt ngay với quyền Khách hàng cá nhân.</p>
       <button class="btn btn-primary" type="submit">Tạo tài khoản khách hàng</button>
     </form>
     <p class="auth-switch">
@@ -79,9 +79,7 @@ export function renderAuthScreen(onAuthenticated) {
         </div>
         <div id="auth-content">${renderLoginFormHtml()}</div>
         <div class="demo-accounts">
-          <b>Xác thực thật qua Backend API &amp; MySQL:</b><br>
-          • Tên đăng nhập mẫu: <b>kh_mai</b>, <b>teller01</b>, <b>supervisor01</b>, <b>admin</b><br>
-          • Nhập sai mật khẩu <b>5 lần</b> sẽ tự động khóa tài khoản tạm thời theo quy tắc bảo mật (EX-01).
+          <b>Bảo mật đăng nhập:</b> Để bảo vệ tài khoản, hệ thống sẽ tự động tạm khóa <b>15 phút</b> nếu nhập sai mật khẩu <b>5 lần</b> liên tiếp.
         </div>
       </section>
     </main>`;

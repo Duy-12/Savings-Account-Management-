@@ -124,12 +124,20 @@ async function capNhatKhachHang(khachHangId, { hoTen, email, soDienThoai, soCccd
         [hoTen, email, soDienThoai, khachHangId]
     );
 
-    await conn.execute(
+    const [updRes] = await conn.execute(
         `UPDATE HO_SO_KHACH_HANG
          SET so_cccd = ?, ngay_sinh = COALESCE(?, ngay_sinh), dia_chi = ?, ngay_cap_nhat = NOW()
          WHERE khach_hang_id = ?`,
         [soCccd, ngaySinh || null, diaChi || null, khachHangId]
     );
+
+    if (updRes && updRes.affectedRows === 0) {
+        await conn.execute(
+            `INSERT INTO HO_SO_KHACH_HANG (khach_hang_id, so_cccd, ngay_sinh, dia_chi)
+             VALUES (?, ?, ?, ?)`,
+            [khachHangId, soCccd, ngaySinh || '1990-01-01', diaChi || null]
+        );
+    }
 
     return layKhachHangTheoId(khachHangId, conn);
 }

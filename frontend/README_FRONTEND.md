@@ -31,7 +31,7 @@
 5. Tài khoản demo bị khóa tạm thời trong trình duyệt sau 5 lần nhập sai. Đây chỉ là mô phỏng Frontend.
 
 ## Lưu ý tích hợp
-Backend trong ZIP hiện mới có `/api/health`, chưa có API nghiệp vụ cho các FR. Vì vậy tài khoản và mật khẩu demo được khai báo trong JavaScript, chưa được xác thực từ CSDL; dữ liệu tài khoản mới tạo chỉ tồn tại trong phiên chạy hiện tại. Đây không phải cơ chế bảo mật thực tế. Bản Frontend chạy demo, lưu dữ liệu sổ trong LocalStorage; không gửi giao dịch thật, không gửi SMS/Email thật, không tính/hạch toán lãi Core Banking. Backend cần lưu tài khoản/mật khẩu đã băm, xác thực thông tin đăng nhập, trả về vai trò từ nguồn tin cậy và kiểm tra quyền ở từng API. Không được dùng vai trò do Frontend tự gửi làm căn cứ phân quyền. Khi Backend hoàn thiện, thành viên phụ trách tích hợp có thể thay các hàm mô phỏng bằng `fetch()` tới REST API.
+Giao diện Frontend đã được tách thành các ES6 Modules chuẩn (`js/main.js`, `js/state/store.js`, `js/api/*.api.js`, `js/utils/*.js`, `js/pages/*.page.js`) và kết nối trực tiếp với Backend REST API (`/api/*`) cùng cơ sở dữ liệu MySQL 19 bảng. Mọi xử lý xác thực mật khẩu băm (`bcryptjs`), khóa tài khoản 5 lần sai, kiểm tra phân quyền RBAC, trừ/cộng số dư tài khoản thanh toán trong ACID Transaction và tính toán lãi suất đều được thực hiện tại máy chủ Backend.
 
 ## Các tệp thành viên 1 chỉnh sửa
 - `frontend/index.html`

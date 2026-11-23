@@ -72,7 +72,7 @@ export async function renderReportsPage(container) {
     container.innerHTML = `
     <section class="panel">
       <div class="panel-head">
-        <div><h3>Báo cáo &amp; thống kê (FR-10)</h3><p>Tổng hợp số liệu trực tiếp từ sổ cái giao dịch và sổ tiết kiệm trong MySQL.</p></div>
+        <div><h3>Báo cáo &amp; thống kê tiền gửi</h3><p>Tổng hợp tình hình mở sổ, tất toán và dòng tiền tiết kiệm theo khoảng thời gian.</p></div>
       </div>
       <form id="report-form" class="form-grid">
         <div class="field">
@@ -168,7 +168,7 @@ export async function renderAccountsPage(container) {
         container.innerHTML = `
         <section class="panel">
           <div class="panel-head">
-            <div><h3>Tài khoản người dùng &amp; phân quyền (FR-11)</h3><p>Quản lý vai trò RBAC và trạng thái khóa tài khoản.</p></div>
+            <div><h3>Tài khoản người dùng &amp; phân quyền</h3><p>Quản lý tài khoản truy cập, vai trò sử dụng và trạng thái hoạt động.</p></div>
             ${canManage ? '<button class="btn btn-primary btn-sm" id="new-account">＋ Tạo tài khoản</button>' : ''}
           </div>
           <div class="table-wrap">
@@ -205,7 +205,7 @@ export async function renderAccountsPage(container) {
         </section>
         <section class="panel" id="account-editor" hidden></section>
         <section class="panel">
-          <h3>Ma trận quyền theo vai trò (RBAC)</h3>
+          <h3>Bảng tổng hợp quyền hạn theo vai trò</h3>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Chức năng</th><th>Khách hàng</th><th>Giao dịch viên</th><th>Kiểm soát viên</th><th>Admin</th></tr></thead>
@@ -234,9 +234,10 @@ export async function renderAccountsPage(container) {
             function openAccountEditor(account = null) {
                 const isEdit = Boolean(account);
                 const currentRole = (account?.roles && account.roles[0]) || 'GIAO_DICH_VIEN';
+                const roleOptions = assignableRoles.filter(([k]) => isEdit || k !== 'KHACH_HANG');
                 editor.hidden = false;
                 editor.innerHTML = `
-                <h3>${isEdit ? `Cập nhật quyền & trạng thái: ${escapeHtml(account.ten_dang_nhap)}` : 'Tạo tài khoản mới'}</h3>
+                <h3>${isEdit ? `Cập nhật quyền & trạng thái: ${escapeHtml(account.ten_dang_nhap)}` : 'Tạo tài khoản nội bộ mới'}</h3>
                 <form id="account-form" class="form-grid" style="margin-top:14px">
                   ${
                       isEdit
@@ -249,13 +250,18 @@ export async function renderAccountsPage(container) {
                   <div class="field">
                     <label>Vai trò</label>
                     <select name="vaiTro">
-                      ${assignableRoles
+                      ${roleOptions
                           .map(
                               ([k, v]) =>
                                   `<option value="${k}" ${k === currentRole ? 'selected' : ''}>${escapeHtml(v)}</option>`
                           )
                           .join('')}
                     </select>
+                    ${
+                        isEdit
+                            ? ''
+                            : '<small class="hint">Khách hàng cá nhân đăng ký trực tuyến hoặc tạo tại mục Quản lý khách hàng để có đủ hồ sơ CCCD.</small>'
+                    }
                   </div>
                   ${
                       isEdit
@@ -325,7 +331,7 @@ export async function renderRatesPage(container) {
         container.innerHTML = `
         <section class="panel">
           <div class="panel-head">
-            <div><h3>Danh mục sản phẩm &amp; biểu lãi suất (FR-12)</h3><p>Lưu lịch sử hiệu lực biểu lãi suất khi thay đổi.</p></div>
+            <div><h3>Danh mục sản phẩm &amp; biểu lãi suất</h3><p>Theo dõi các kỳ hạn gửi và lưu lịch sử hiệu lực khi điều chỉnh lãi suất.</p></div>
             ${canEdit ? '<button class="btn btn-primary btn-sm" id="add-rate">＋ Thêm kỳ hạn</button>' : ''}
           </div>
           <div class="table-wrap">
@@ -366,7 +372,16 @@ export async function renderRatesPage(container) {
                     [1, 'Tiết kiệm Thông thường VND'],
                     [2, 'Tiết kiệm Tích lũy Tương lai']
                 ]);
-                rates.forEach((r) => productMap.set(Number(r.san_pham_id), r.ten_san_pham));
+                const productMinMap = new Map([
+                    [1, 100000],
+                    [2, 500000]
+                ]);
+                rates.forEach((r) => {
+                    productMap.set(Number(r.san_pham_id), r.ten_san_pham);
+                    if (r.so_tien_toi_thieu) {
+                        productMinMap.set(Number(r.san_pham_id), Number(r.so_tien_toi_thieu));
+                    }
+                });
 
                 editor.hidden = false;
                 editor.innerHTML = `
@@ -381,7 +396,7 @@ export async function renderRatesPage(container) {
                           ? ''
                           : `<div class="field">
                                <label>Sản phẩm tiết kiệm</label>
-                               <select name="sanPhamId" required>
+                               <select name="sanPhamId" id="rate-product-select" required>
                                  ${[...productMap.entries()]
                                      .map(([id, name]) => `<option value="${id}">${escapeHtml(name)}</option>`)
                                      .join('')}
@@ -392,14 +407,27 @@ export async function renderRatesPage(container) {
                   <div class="field"><label>Lãi suất (%/năm)</label><input name="laiSuatNam" type="number" min="0.01" step="0.01" value="${
                       isEdit ? Number(rate.lai_suat_nam) : ''
                   }" required></div>
-                  <div class="field"><label>Số tiền tối thiểu (VNĐ)</label><input name="soTienToiThieu" type="number" min="1000" value="${
-                      isEdit ? Number(rate.so_tien_toi_thieu) : 100000
-                  }" required></div>
+                  <div class="field">
+                    <label>Số tiền gửi tối thiểu của sản phẩm (VNĐ)</label>
+                    <input name="soTienToiThieu" id="rate-min-amount" type="number" min="1000" value="${
+                        isEdit ? Number(rate.so_tien_toi_thieu) : productMinMap.get(1) || 100000
+                    }" required>
+                    <small class="hint">Mức tiền gửi tối thiểu áp dụng chung cho sản phẩm tiết kiệm này.</small>
+                  </div>
                   <div class="field full form-actions">
                     <button type="button" class="btn btn-light" id="cancel-rate-edit">Đóng</button>
                     <button type="submit" class="btn btn-primary">Lưu cấu hình</button>
                   </div>
                 </form>`;
+
+                const productSelect = $('#rate-product-select', editor);
+                const minAmountInput = $('#rate-min-amount', editor);
+                if (productSelect && minAmountInput) {
+                    productSelect.onchange = () => {
+                        const selectedMin = productMinMap.get(Number(productSelect.value));
+                        if (selectedMin) minAmountInput.value = selectedMin;
+                    };
+                }
 
                 $('#cancel-rate-edit', editor).onclick = () => {
                     editor.hidden = true;
@@ -448,6 +476,12 @@ export async function renderRatesPage(container) {
     }
 }
 
+const NOTIFY_TYPE_LABELS = {
+    NHAC_DAO_HAN: 'Nhắc đáo hạn',
+    BIEN_DONG_SO_DU: 'Biến động số dư',
+    TAI_TUC_THANH_CONG: 'Tái tục thành công'
+};
+
 export async function renderNotificationsPage(container) {
     container.innerHTML = '<div class="panel"><div class="empty">Đang tải lịch sử thông báo...</div></div>';
 
@@ -458,8 +492,8 @@ export async function renderNotificationsPage(container) {
         container.innerHTML = `
         <section class="panel">
           <div class="panel-head">
-            <div><h3>Thông báo đáo hạn &amp; lịch sử gửi (FR-13 &amp; EX-02)</h3><p>Quét sổ hoạt động có ngày đáo hạn trong 3 ngày tới và gửi tin nhắn.</p></div>
-            ${canScan ? '<button class="btn btn-primary btn-sm" id="scan-maturity">▶ Chạy quét đáo hạn ngay</button>' : ''}
+            <div><h3>Thông báo đáo hạn &amp; lịch sử gửi tin</h3><p>Theo dõi tin nhắn nhắc đáo hạn (trong 3 ngày tới) và thông báo biến động đã gửi cho khách hàng.</p></div>
+            ${canScan ? '<button class="btn btn-primary btn-sm" id="scan-maturity">▶ Quét thông báo đáo hạn</button>' : ''}
           </div>
           <div class="table-wrap">
             <table>
@@ -474,7 +508,7 @@ export async function renderNotificationsPage(container) {
                                   (n) => `
                           <tr>
                             <td class="strong">${escapeHtml(n.ten_khach_hang)}</td>
-                            <td>${escapeHtml(n.loai_thong_bao)}</td>
+                            <td>${escapeHtml(NOTIFY_TYPE_LABELS[n.loai_thong_bao] || n.loai_thong_bao)}</td>
                             <td>${escapeHtml(n.noi_dung)}</td>
                             <td>${escapeHtml(n.kenh_gui)}</td>
                             <td>${fmtDate(n.ngay_tao)}</td>
@@ -482,7 +516,7 @@ export async function renderNotificationsPage(container) {
                           </tr>`
                               )
                               .join('')
-                        : '<tr><td colspan="6"><div class="empty">Chưa có log thông báo.</div></td></tr>'
+                        : '<tr><td colspan="6"><div class="empty">Chưa có thông báo nào được ghi nhận.</div></td></tr>'
                 }
               </tbody>
             </table>
@@ -521,14 +555,18 @@ export async function renderRolloverPage(container) {
         <section class="panel">
           <div class="panel-head">
             <div>
-              <h3>Xử lý tái tục sổ tự động cuối ngày (FR-14)</h3>
-              <p>Tự động tính lãi thực tế kỳ cũ và tạo chu kỳ mới cho các sổ đến hạn có chỉ thị tái tục.</p>
+              <h3>Xử lý tái tục sổ tự động cuối ngày</h3>
+              <p>Tự động tính lãi thực tế kỳ cũ và gia hạn chu kỳ mới cho các sổ đến hạn có đăng ký tái tục.</p>
             </div>
-            ${canRun ? '<button class="btn btn-primary btn-sm" id="run-rollover">▶ Chạy tái tục tự động ngay</button>' : ''}
+            ${canRun ? '<button class="btn btn-primary btn-sm" id="run-rollover">▶ Chạy tái tục ngay</button>' : ''}
           </div>
-          ${buildPassbooksTableHtml(dueBooks)}
+          ${
+              dueBooks.length
+                  ? buildPassbooksTableHtml(dueBooks)
+                  : '<div class="empty">Hiện chưa có sổ tiết kiệm nào đến kỳ tái tục.</div>'
+          }
           <div class="notice warn" style="margin-top:13px">
-            Cron Job tự động chạy lúc 23:55 mỗi ngày. Nút trên cho phép Kiểm soát viên / Admin kích hoạt xử lý ngay trong Transaction ACID.
+            Hệ thống tự động rà soát và gia hạn chu kỳ mới vào 23:55 hằng ngày. Quản lý có thể bấm nút phía trên để xử lý ngay khi cần.
           </div>
           <div id="rollover-result"></div>
         </section>`;

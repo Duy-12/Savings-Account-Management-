@@ -6,7 +6,7 @@ import * as savingsApi from '../api/savings.api.js';
 import * as adminApi from '../api/admin.api.js';
 import { store } from '../state/store.js';
 import { $, $$, escapeHtml, toast, withButtonLoading } from '../utils/ui.js';
-import { fmtDate, money, rolloverLabel, statusBadge, termLabel, today } from '../utils/format.js';
+import { fmtDate, money, rolloverLabel, statusBadge, statusLabel, termLabel, today } from '../utils/format.js';
 
 function renderSearchTable(list) {
     if (!list.length) {
@@ -56,7 +56,7 @@ export async function renderSearchPage(container) {
     <section class="panel">
       <div class="panel-head">
         <div>
-          <h3>Tra cứu thông tin sổ tiết kiệm (FR-05)</h3>
+          <h3>Tra cứu thông tin sổ tiết kiệm</h3>
           <p>Tìm theo mã sổ, số CCCD hoặc tên khách hàng (kèm tiền lãi tạm tính đến hôm nay).</p>
         </div>
       </div>
@@ -115,7 +115,7 @@ export async function renderSearchPage(container) {
                     <div class="timeline-item">
                       <span class="dot"></span>
                       <div>
-                        <b>${escapeHtml(h.trang_thai_moi)}</b> (${escapeHtml(h.nguoi_thay_doi)})
+                        <b>${escapeHtml(statusLabel(h.trang_thai_moi))}</b> (${escapeHtml(h.nguoi_thay_doi)})
                         <small>${escapeHtml(h.ly_do || '—')} · ${fmtDate(h.thoi_diem_thay_doi)}</small>
                       </div>
                     </div>`
@@ -151,7 +151,7 @@ export async function renderInterestPage(container) {
         <div class="grid-2">
           <section class="panel">
             <div class="panel-head">
-              <div><h3>Tính và tra cứu tiền lãi (FR-06)</h3><p>Tính toán chính xác tại Backend theo công thức Core Banking (365 ngày/năm).</p></div>
+              <div><h3>Tính và tra cứu tiền lãi dự kiến</h3><p>Ước tính số tiền lãi nhận được dựa trên số tiền gốc, lãi suất và số ngày thực gửi (cơ sở 365 ngày/năm).</p></div>
             </div>
             <form id="interest-form" class="form-grid">
               <div class="field full">
@@ -194,7 +194,7 @@ export async function renderInterestPage(container) {
           <section class="panel">
             <h3>Kết quả tính toán</h3>
             <div id="interest-result" class="empty">Nhập tham số hợp lệ và chọn “Tính tiền lãi”.</div>
-            <div class="notice" style="margin-top:12px">Kết quả được tính trực tiếp từ API <code>/api/interest/calculate</code>.</div>
+            <div class="notice" style="margin-top:12px">Số tiền lãi trên dùng để tham khảo trước khi mở hoặc tất toán sổ tiết kiệm.</div>
           </section>
         </div>`;
 
@@ -253,8 +253,8 @@ export async function renderSettlementPage(container, go) {
         <section class="panel">
           <div class="panel-head">
             <div>
-              <h3>Tất toán / Rút trước hạn (FR-07 &amp; EX-03)</h3>
-              <p>Quy trình 2 bước: Kiểm tra điều kiện &amp; cảnh báo mất lãi (nếu trước hạn) → Xác nhận hạch toán Transaction.</p>
+              <h3>Tất toán sổ tiết kiệm</h3>
+              <p>Kiểm tra số tiền gốc, lãi thực nhận và xác nhận hoàn tất giao dịch tất toán.</p>
             </div>
           </div>
           <form id="settle-form" class="form-grid">
@@ -350,8 +350,8 @@ export async function renderSettlementPage(container, go) {
             <h3>Xác nhận thực hiện tất toán</h3>
             <p class="sub">${
                 p.isBeforeMaturity
-                    ? 'Cảnh báo EX-03: Bạn đang rút trước ngày đáo hạn, lãi suất bị tính lại theo mức Không kỳ hạn.'
-                    : 'Xác nhận tất toán đúng hạn / không kỳ hạn.'
+                    ? 'Lưu ý: Sổ chưa đến ngày đáo hạn nên tiền lãi sẽ được tính lại theo mức lãi suất không kỳ hạn.'
+                    : 'Xác nhận hoàn tất tất toán sổ tiết kiệm.'
             }</p>
             <div class="notice ${p.isBeforeMaturity ? 'warn' : ''}">
               Mã sổ: <b>${escapeHtml(p.maSo)}</b> · Hình thức nhận: <b>${

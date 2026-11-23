@@ -44,7 +44,7 @@ export async function renderOpenBookPage(container, isOnline, go) {
         <section class="panel">
           <div class="panel-head">
             <div>
-              <h3>${isOnline ? 'Mở sổ tiết kiệm trực tuyến (FR-03)' : 'Mở sổ tiết kiệm tại quầy (FR-04)'}</h3>
+              <h3>${isOnline ? 'Mở sổ tiết kiệm trực tuyến' : 'Mở sổ tiết kiệm tại quầy'}</h3>
               <p>${
                   isOnline
                       ? 'Chọn kỳ hạn, số tiền gửi và tài khoản thanh toán nguồn để trừ tiền tự động.'
@@ -97,7 +97,7 @@ export async function renderOpenBookPage(container, isOnline, go) {
             ${
                 isOnline
                     ? `<div class="field">
-                         <label>Kênh gửi thông báo (UC-EX02)</label>
+                         <label>Kênh nhận thông báo giao dịch</label>
                          <select name="kenhThongBao">
                            <option value="EMAIL">Email</option>
                            <option value="SMS">SMS</option>
@@ -110,7 +110,7 @@ export async function renderOpenBookPage(container, isOnline, go) {
             }
 
             <div class="field full">
-              <div class="hint">Lãi suất và Transaction trừ tiền / tạo chu kỳ đầu tiên được kiểm soát hoàn toàn tại máy chủ MySQL.</div>
+              <div class="hint">Số tiền gửi và lãi suất áp dụng sẽ được hệ thống kiểm tra và xác nhận an toàn khi bạn bấm hoàn tất.</div>
             </div>
 
             <div class="field full form-actions">
@@ -196,7 +196,7 @@ export async function renderOpenBookPage(container, isOnline, go) {
                         receiptEl.innerHTML = `
                         <div class="panel-head">
                           <div>
-                            <h3>Chứng từ Xác nhận Mở sổ Tiết kiệm tại Quầy (FR-04)</h3>
+                            <h3>Phiếu Xác nhận Mở Sổ Tiết Kiệm tại Quầy</h3>
                             <p>Mã chứng từ: <b>${escapeHtml(res.chungTuId)}</b> · Ngày lập: ${fmtDate(res.ngayMo)}</p>
                           </div>
                           ${statusBadge('DANG_HOAT_DONG')}

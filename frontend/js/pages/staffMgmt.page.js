@@ -5,7 +5,7 @@
 import * as customerApi from '../api/customer.api.js';
 import * as savingsApi from '../api/savings.api.js';
 import { $, $$, escapeHtml, toast, withButtonLoading } from '../utils/ui.js';
-import { fmtDate, statusBadge } from '../utils/format.js';
+import { fmtDate, statusBadge, statusLabel } from '../utils/format.js';
 import { buildPassbooksTableHtml } from './dashboard.page.js';
 import { isValidCccd, isValidEmail, isValidPhone } from '../utils/validators.js';
 
@@ -18,7 +18,7 @@ export async function renderCustomersPage(container) {
         container.innerHTML = `
         <section class="panel">
           <div class="panel-head">
-            <div><h3>Hồ sơ khách hàng (FR-08)</h3><p>Tra cứu, thêm mới và cập nhật thông tin định danh CCCD.</p></div>
+            <div><h3>Danh sách hồ sơ khách hàng</h3><p>Tra cứu, thêm mới và cập nhật thông tin định danh CCCD của khách hàng.</p></div>
             <button class="btn btn-primary btn-sm" id="add-customer">＋ Thêm khách hàng</button>
           </div>
           <div class="table-wrap">
@@ -125,8 +125,8 @@ export async function renderBookStatusPage(container) {
         <section class="panel">
           <div class="panel-head">
             <div>
-              <h3>Quản lý thông tin và trạng thái sổ (FR-09)</h3>
-              <p>Chuyển đổi trạng thái theo State Machine (Phong tỏa, Báo mất, Giải tỏa) và ghi lịch sử Audit Trail.</p>
+              <h3>Quản lý trạng thái sổ tiết kiệm</h3>
+              <p>Cập nhật tình trạng sổ (Phong tỏa, Báo mất, Giải tỏa) và ghi nhận lịch sử kiểm tra.</p>
             </div>
           </div>
           ${buildPassbooksTableHtml(books)}
@@ -138,7 +138,7 @@ export async function renderBookStatusPage(container) {
                     .map(
                         (b) =>
                             `<option value="${escapeHtml(b.ma_so)}">${escapeHtml(b.ma_so)} (${escapeHtml(
-                                b.trang_thai
+                                statusLabel(b.trang_thai)
                             )})</option>`
                     )
                     .join('') || '<option value="">Không còn sổ có thể đổi trạng thái</option>'}
@@ -147,13 +147,13 @@ export async function renderBookStatusPage(container) {
             <div class="field">
               <label>Trạng thái mới</label>
               <select name="trangThaiMoi" required>
-                <option value="PHONG_TOA">Phong tỏa (PHONG_TOA)</option>
-                <option value="BAO_MAT">Báo mất (BAO_MAT)</option>
-                <option value="DANG_HOAT_DONG">Giải tỏa / Kích hoạt lại (DANG_HOAT_DONG)</option>
+                <option value="PHONG_TOA">Phong tỏa sổ</option>
+                <option value="BAO_MAT">Báo mất sổ</option>
+                <option value="DANG_HOAT_DONG">Giải tỏa / Kích hoạt lại</option>
               </select>
             </div>
             <div class="field full">
-              <label>Lý do thay đổi (bắt buộc lưu Audit Log)</label>
+              <label>Lý do thay đổi trạng thái (bắt buộc)</label>
               <input name="lyDo" required minlength="3" placeholder="Nhập lý do cập nhật trạng thái...">
             </div>
             <div class="field full form-actions">
@@ -175,7 +175,7 @@ export async function renderBookStatusPage(container) {
                         trangThaiMoi: d.trangThaiMoi,
                         lyDo: d.lyDo
                     });
-                    toast(`Đã đổi trạng thái sổ ${res.maSo}: ${res.trangThaiCu} → ${res.trangThaiMoi}.`);
+                    toast(`Đã đổi trạng thái sổ ${res.maSo}: ${statusLabel(res.trangThaiCu)} → ${statusLabel(res.trangThaiMoi)}.`);
                     await renderBookStatusPage(container);
                 } catch (err) {
                     toast(err.message, 'error');

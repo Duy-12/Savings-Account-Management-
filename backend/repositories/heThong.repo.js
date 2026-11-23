@@ -7,14 +7,26 @@ const { NOTIFY_STATUS } = require('../config/constants');
 
 async function tongHopDuLieuBaoCao({ loaiBaoCao, trangThai, from, to }, db = pool) {
     const isMaturityReport = loaiBaoCao === 'SO_DEN_HAN';
-    const conditions = isMaturityReport
-        ? ['ck.ngay_dao_han IS NOT NULL AND ck.ngay_dao_han BETWEEN ? AND ?']
-        : ['stk.ngay_mo BETWEEN ? AND ?'];
-    const params = [from, to];
+    const isNewBooksReport = loaiBaoCao === 'SO_MO_MOI';
 
+    let conditions;
+    let params;
     if (isMaturityReport) {
-        conditions.push("stk.trang_thai = 'DANG_HOAT_DONG'");
-    } else if (trangThai && trangThai !== 'ALL') {
+        conditions = [
+            'ck.ngay_dao_han IS NOT NULL AND ck.ngay_dao_han BETWEEN ? AND ?',
+            "stk.trang_thai = 'DANG_HOAT_DONG'"
+        ];
+        params = [from, to];
+    } else if (isNewBooksReport) {
+        conditions = ['stk.ngay_mo BETWEEN ? AND ?'];
+        params = [from, to];
+    } else {
+        // Báo cáo TONG_HOP: lấy toàn bộ danh mục sổ tiết kiệm tính đến ngày kết thúc kỳ báo cáo
+        conditions = ['stk.ngay_mo <= ?'];
+        params = [to];
+    }
+
+    if (!isMaturityReport && trangThai && trangThai !== 'ALL') {
         conditions.push('stk.trang_thai = ?');
         params.push(trangThai);
     }
